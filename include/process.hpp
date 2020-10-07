@@ -2,6 +2,7 @@
 #define PROCESS_HPP
 
 #include <string>
+#include <vector>
 
 namespace hw1_process {
 
@@ -15,12 +16,12 @@ namespace hw1_process {
         void readExact(void* data, size_t len);
         void closeStdin();
         void close();
+        void close_fd(std::vector<int>& fd_for_close);
 
     private:
         int read_fd;
         int write_fd;
         pid_t proc_pid;
-
     };
 }
 
