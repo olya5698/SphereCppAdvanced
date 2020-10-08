@@ -16,7 +16,7 @@ namespace hw1_process {
         void readExact(void* data, size_t len);
         void closeStdin();
         void close();
-        void close_fd(std::vector<int>& fd_for_close);
+        void close_fd(std::vector<int> fd_for_close);
 
     private:
         int read_fd;
