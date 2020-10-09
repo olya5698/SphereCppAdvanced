@@ -6,7 +6,7 @@
 #include <exception>
 #include <vector>
 
-namespace hw1_process {
+namespace ns_process {
 
     Process::Process(const std::string &path) {
 
@@ -54,17 +54,26 @@ namespace hw1_process {
     }
 
     Process::~Process() {
-        close();
+        try {
+            close();
+        }
+        catch (const std::runtime_error& err) {
+            std::cerr << err.what() << std::endl;
+        }
     }
+
 
     size_t Process::write(const void *data, size_t len) {
         if (write_fd_ == -1) {
+            read_fd_ = -1;
             throw std::runtime_error("Writing to closed descriptor aborted");
         }
 
         ssize_t bytes_written = ::write(write_fd_, data, len);
 
         if (bytes_written == -1) {
+            write_fd_ = -1;
+            read_fd_ = -1;
             throw std::runtime_error("Write Error");
         }
 
@@ -77,18 +86,29 @@ namespace hw1_process {
 
         while (bytes_written != len) {
             data_start += bytes_written;
-            bytes_written += write(data_start, len - bytes_written);
+            size_t bytes_written_part = write(data_start, len - bytes_written);
+
+            if (bytes_written_part == 0) {
+                write_fd_ = -1;
+                read_fd_ = -1;
+                throw std::runtime_error("Zero Bytes Written");
+            }
+
+            bytes_written += bytes_written_part;
         }
     }
 
     size_t Process::read(void *data, size_t len) {
         if (read_fd_ == -1) {
+            write_fd_ = -1;
             throw std::runtime_error("Reading from closed descriptor aborted");
         }
 
         size_t bytes_read = ::read(read_fd_, data, len);
 
         if (bytes_read == -1) {
+            write_fd_ = -1;
+            read_fd_ = -1;
             throw std::runtime_error("Read Error");
         }
 
@@ -101,7 +121,15 @@ namespace hw1_process {
 
         while (bytes_read != len) {
             data_start += bytes_read;
-            bytes_read += read(data_start, len - bytes_read);
+            size_t bytes_read_part = read(data_start, len - bytes_read);
+            
+            if (bytes_read_part == 0) {
+                write_fd_ = -1;
+                read_fd_ = -1;
+                throw std::runtime_error("Zero Bytes Read");
+            }
+
+            bytes_read += bytes_read_part;
         }
     }
 

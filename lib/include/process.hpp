@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace hw1_process {
+namespace ns_process {
 
     class Process {
     public:
