@@ -19,9 +19,9 @@ namespace hw1_process {
         void close_fd(std::vector<int> fd_for_close);
 
     private:
-        int read_fd;
-        int write_fd;
-        pid_t proc_pid;
+        int read_fd_;
+        int write_fd_;
+        pid_t proc_pid_;
     };
 }
 

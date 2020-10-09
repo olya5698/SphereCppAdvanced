@@ -22,13 +22,13 @@ namespace hw1_process {
             throw std::runtime_error("Pipe2 Error");
         }
 
-        proc_pid = ::fork();
+        proc_pid_ = ::fork();
 
-        if (proc_pid == -1) {
+        if (proc_pid_ == -1) {
             close_fd({pipe1_fd[0], pipe1_fd[1], pipe2_fd[0], pipe2_fd[1]});
             throw std::runtime_error("Fork Error");
 
-        } else if (proc_pid == 0) {
+        } else if (proc_pid_ == 0) {
 
             if (::dup2(pipe1_fd[0], STDIN_FILENO) == -1) {
                 close_fd({pipe1_fd[0], pipe1_fd[1], pipe2_fd[0], pipe2_fd[1]});
@@ -47,8 +47,8 @@ namespace hw1_process {
             }
 
         } else {
-            read_fd = pipe2_fd[0];
-            write_fd = pipe1_fd[1];
+            read_fd_ = pipe2_fd[0];
+            write_fd_ = pipe1_fd[1];
             close_fd({pipe1_fd[0], pipe2_fd[1]});
         }
     }
@@ -58,11 +58,11 @@ namespace hw1_process {
     }
 
     size_t Process::write(const void *data, size_t len) {
-        if (write_fd == -1) {
+        if (write_fd_ == -1) {
             throw std::runtime_error("Writing to closed descriptor aborted");
         }
 
-        ssize_t bytes_written = ::write(write_fd, data, len);
+        ssize_t bytes_written = ::write(write_fd_, data, len);
 
         if (bytes_written == -1) {
             throw std::runtime_error("Write Error");
@@ -82,11 +82,11 @@ namespace hw1_process {
     }
 
     size_t Process::read(void *data, size_t len) {
-        if (read_fd == -1) {
+        if (read_fd_ == -1) {
             throw std::runtime_error("Reading from closed descriptor aborted");
         }
 
-        size_t bytes_read = ::read(read_fd, data, len);
+        size_t bytes_read = ::read(read_fd_, data, len);
 
         if (bytes_read == -1) {
             throw std::runtime_error("Read Error");
@@ -106,39 +106,39 @@ namespace hw1_process {
     }
 
     void Process::closeStdin() {
-        if (write_fd != -1) {
-            close_fd({write_fd});
-            write_fd = -1;
+        if (write_fd_ != -1) {
+            close_fd({write_fd_});
+            write_fd_ = -1;
         }
     }
 
     void Process::close() {
-        if (proc_pid) {
-            if (write_fd != -1) {
-                close_fd({write_fd});
-                write_fd = -1;
+        if (proc_pid_) {
+            if (write_fd_ != -1) {
+                close_fd({write_fd_});
+                write_fd_ = -1;
             }
 
-            if (read_fd != -1) {
-                close_fd({read_fd});
-                read_fd = -1;
+            if (read_fd_ != -1) {
+                close_fd({read_fd_});
+                read_fd_ = -1;
             }
 
-            if (::kill(proc_pid, SIGINT) == -1) {
+            if (::kill(proc_pid_, SIGINT) == -1) {
                 throw std::runtime_error("Kill Error");
             }
 
-            if (::waitpid(proc_pid, nullptr, 0) == -1) {
+            if (::waitpid(proc_pid_, nullptr, 0) == -1) {
                 throw std::runtime_error("Waitpid Error");
             }
 
-            proc_pid = 0;
+            proc_pid_ = 0;
         }
     }
 
     void Process::close_fd(std::vector<int> fd_for_close) {
-        for (int i = 0; i < fd_for_close.size(); i++) {
-            if (::close(fd_for_close[i]) == -1) {
+        for (auto i : fd_for_close) {
+            if (::close(i) == -1) {
                 throw std::runtime_error("Close Error");
             }
         }
