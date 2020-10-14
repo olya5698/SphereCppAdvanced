@@ -7,7 +7,7 @@ set(LIB_CODE
         "src/FileLogger.cpp"
         "src/Level.cpp"
         "src/Logger.cpp"
-        "src/LoggerFunctions"
+        "src/LoggerFunctions.cpp"
         "src/Exception.cpp"
 )
 
