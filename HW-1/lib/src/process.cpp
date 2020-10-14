@@ -42,9 +42,8 @@ namespace ns_process {
 
             close_fd({pipe1_fd[0], pipe1_fd[1], pipe2_fd[0], pipe2_fd[1]});
 
-            if (::execl(path.c_str(), path.c_str(), nullptr) == -1) {
-                throw std::runtime_error("Execl Error");
-            }
+            ::execl(path.c_str(), path.c_str(), nullptr);
+            throw std::runtime_error("Execl Error");
 
         } else {
             read_fd_ = pipe2_fd[0];
@@ -62,18 +61,14 @@ namespace ns_process {
         }
     }
 
-
     size_t Process::write(const void *data, size_t len) {
         if (write_fd_ == -1) {
-            read_fd_ = -1;
             throw std::runtime_error("Writing to closed descriptor aborted");
         }
 
         ssize_t bytes_written = ::write(write_fd_, data, len);
 
         if (bytes_written == -1) {
-            write_fd_ = -1;
-            read_fd_ = -1;
             throw std::runtime_error("Write Error");
         }
 
@@ -89,8 +84,6 @@ namespace ns_process {
             size_t bytes_written_part = write(data_start, len - bytes_written);
 
             if (bytes_written_part == 0) {
-                write_fd_ = -1;
-                read_fd_ = -1;
                 throw std::runtime_error("Zero Bytes Written");
             }
 
@@ -100,15 +93,12 @@ namespace ns_process {
 
     size_t Process::read(void *data, size_t len) {
         if (read_fd_ == -1) {
-            write_fd_ = -1;
             throw std::runtime_error("Reading from closed descriptor aborted");
         }
 
         size_t bytes_read = ::read(read_fd_, data, len);
 
         if (bytes_read == -1) {
-            write_fd_ = -1;
-            read_fd_ = -1;
             throw std::runtime_error("Read Error");
         }
 
@@ -124,8 +114,6 @@ namespace ns_process {
             size_t bytes_read_part = read(data_start, len - bytes_read);
             
             if (bytes_read_part == 0) {
-                write_fd_ = -1;
-                read_fd_ = -1;
                 throw std::runtime_error("Zero Bytes Read");
             }
 
@@ -153,10 +141,12 @@ namespace ns_process {
             }
 
             if (::kill(proc_pid_, SIGINT) == -1) {
+                proc_pid_ = 0;
                 throw std::runtime_error("Kill Error");
             }
 
             if (::waitpid(proc_pid_, nullptr, 0) == -1) {
+                proc_pid_ = 0;
                 throw std::runtime_error("Waitpid Error");
             }
 
@@ -166,9 +156,7 @@ namespace ns_process {
 
     void Process::close_fd(std::vector<int> fd_for_close) {
         for (auto i : fd_for_close) {
-            if (::close(i) == -1) {
-                throw std::runtime_error("Close Error");
-            }
+            ::close(i);
         }
     }
 
