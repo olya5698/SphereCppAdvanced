@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include "StderrLogger.hpp"
 
 namespace log {
@@ -11,7 +10,7 @@ namespace log {
 
 	void StderrLogger::log(const std::string& msg, Level log_level) {
 	    if (log_level >= level()) {
-	        std::cerr << (log::print_level(log_level)) << msg.c_str() << std::endl;
+	        std::cerr << (log::get_level(log_level)) << msg.c_str() << std::endl;
 	    }
 	}
 

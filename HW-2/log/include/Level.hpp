@@ -10,7 +10,7 @@ namespace log {
 	    ERROR
 	};
 
-	const char* print_level(Level& log_level);
+	const char* get_level(Level& log_level);
 
 }
 

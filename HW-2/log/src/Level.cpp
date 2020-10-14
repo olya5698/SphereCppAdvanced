@@ -2,7 +2,7 @@
 
 namespace log {
 
-	const char* print_level(Level& log_level) {
+	const char* get_level(Level& log_level) {
 		if (log_level == log::Level::DEBUG) {
 			return "DEBUG: ";
 		}

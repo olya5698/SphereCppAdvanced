@@ -13,7 +13,7 @@ namespace log {
 
 	void FileLogger::log(const std::string& msg, Level log_level) {
 	    if (log_level >= level()) {
-	        log_file_ << (log::print_level(log_level)) << msg.c_str() << std::endl;
+	        log_file_ << (log::get_level(log_level)) << msg.c_str() << std::endl;
 	    }
 	}
 

@@ -6,6 +6,9 @@ set(LIB_CODE
         "src/StderrLogger.cpp"
         "src/FileLogger.cpp"
         "src/Level.cpp"
+        "src/Logger.cpp"
+        "src/LoggerFunctions"
+        "src/Exception.cpp"
 )
 
 add_library(${LIB_NAME} STATIC ${LIB_CODE})
