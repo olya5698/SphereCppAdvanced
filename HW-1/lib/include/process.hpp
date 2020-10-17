@@ -16,12 +16,13 @@ namespace ns_process {
         void readExact(void* data, size_t len);
         void closeStdin();
         void close();
-        void close_fd(std::vector<int> fd_for_close);
 
     private:
         int read_fd_;
         int write_fd_;
         pid_t proc_pid_;
+
+        void close_fd(std::vector<int> fd_for_close);
     };
 }
 
