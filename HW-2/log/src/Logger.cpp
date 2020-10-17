@@ -1,6 +1,6 @@
 #include "Logger.hpp"
 #include "StderrLogger.hpp"
-#include "Exception.hpp"
+#include <stdexcept> 
 
 namespace log {
 
@@ -19,7 +19,7 @@ namespace log {
 	    if (base_log_ptr) {
 	        global_logger_ = std::move(base_log_ptr);
 	    } else {
-	        throw LoggerException("Bad pointer to BaseLogger");
+	        throw std::runtime_error("Bad pointer to BaseLogger");
 	    }
 	}
 

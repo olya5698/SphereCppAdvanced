@@ -9,9 +9,7 @@ namespace log {
 	void StderrLogger::flush() {}
 
 	void StderrLogger::log(const std::string& msg, Level log_level) {
-	    if (log_level >= level()) {
-	        std::cerr << (log::get_level(log_level)) << msg.c_str() << std::endl;
-	    }
+	    print_log_by_level(msg, log_level, std::cerr);
 	}
 
 }

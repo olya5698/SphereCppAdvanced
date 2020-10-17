@@ -12,7 +12,7 @@ namespace log {
         void log(const std::string& msg, Level log_level) override;
 
     public:
-        explicit FileLogger() noexcept;
+        FileLogger() noexcept;
         explicit FileLogger(const std::string& file_path, Level log_level) noexcept;
         void flush() override;
     };

@@ -30,4 +30,10 @@ namespace log {
 	    return level_;
 	}
 
+	void BaseLogger::print_log_by_level(const std::string& msg, Level log_level, std::ostream& out) {
+		if (log_level >= level()) {
+	    	out << (log::get_level(log_level)) << msg.c_str() << std::endl;
+	    }
+	}
+
 }

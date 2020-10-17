@@ -13,7 +13,7 @@ namespace log {
         BaseLoggerPtr global_logger_;
 
         Logger();
-        ~Logger() noexcept = default;
+        ~Logger() = default;
 
     public:
         static Logger& get_instance() noexcept;

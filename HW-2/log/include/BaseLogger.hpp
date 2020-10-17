@@ -2,6 +2,8 @@
 #define BASE_LOGGER_HPP
 
 #include <string>
+#include <iostream>
+#include <fstream>
 #include "Level.hpp"
 
 namespace log {
@@ -12,9 +14,9 @@ namespace log {
 	    virtual void log(const std::string& msg, Level log_level) = 0;
 
 	public:
-	    explicit BaseLogger() noexcept;
+	    BaseLogger() noexcept;
 	    explicit BaseLogger(Level log_level) noexcept;
-	    virtual ~BaseLogger() noexcept = default;
+	    virtual ~BaseLogger() = default;
 
 	    void debug(const std::string& msg);
 	    void info(const std::string& msg);
@@ -24,7 +26,7 @@ namespace log {
 	    void set_level(Level log_level);
 	    Level level() const;
 	    virtual void flush() = 0;
-
+	    void print_log_by_level(const std::string& msg, Level log_level, std::ostream &out);
 	}; 
 
 }

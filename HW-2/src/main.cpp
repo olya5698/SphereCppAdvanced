@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <string>
+#include <exception>
 
 void BaseLoggerExample() {
     std::string log_path = "logfile.log";
@@ -32,7 +33,13 @@ void BaseLoggerExample() {
 }
 
 void AdvancedLoggerExample() {
-    log::init_with_stdout_logger(log::Level::WARNING);
+    try {
+        log::init_with_stdout_logger(log::Level::WARNING);
+    }
+    catch (const std::runtime_error& err) {
+        std::cerr << err.what() << std::endl;
+    }
+
     log::debug("advanced cout debug message");
     log::info("advanced cout info message");
     log::warn("advanced cout warn message");
@@ -47,7 +54,13 @@ void AdvancedLoggerExample() {
     cerr_logger.info("Не попадет в лог");
     cerr_logger.error("Попадет в лог");
 
-    log::init_with_file_logger("logfile.log", log::Level::ERROR);
+    try {
+        log::init_with_file_logger("logfile.log", log::Level::ERROR);
+    }
+    catch (const std::runtime_error& err) {
+        std::cerr << err.what() << std::endl;
+    }
+    
     log::error("advanced file error message");
 
 }

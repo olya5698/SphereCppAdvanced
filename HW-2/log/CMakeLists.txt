@@ -8,7 +8,6 @@ set(LIB_CODE
         "src/Level.cpp"
         "src/Logger.cpp"
         "src/LoggerFunctions.cpp"
-        "src/Exception.cpp"
 )
 
 add_library(${LIB_NAME} STATIC ${LIB_CODE})

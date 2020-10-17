@@ -1,4 +1,3 @@
-#include <iostream>
 #include "StdoutLogger.hpp"
 #include "Level.hpp"
 
@@ -12,9 +11,7 @@ namespace log {
 	}
 
 	void StdoutLogger::log(const std::string& msg, Level log_level) {
-	    if (log_level >= level()) {
-	    	std::cout << (log::get_level(log_level)) << msg.c_str() << std::endl;
-	    }
+	    print_log_by_level(msg, log_level, std::cout);
 	}
 
 }

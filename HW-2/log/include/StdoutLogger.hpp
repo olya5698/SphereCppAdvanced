@@ -10,7 +10,7 @@ namespace log {
 	    void log(const std::string& msg, Level log_level) override;
 	
 	public:
-	    explicit StdoutLogger() = default;
+	    StdoutLogger() = default;
 	    explicit StdoutLogger(Level log_level) noexcept;
 	    void flush() override;
 	};
