@@ -27,6 +27,7 @@ namespace log {
 	    Level level() const;
 	    virtual void flush() = 0;
 	    void print_log_by_level(const std::string& msg, Level log_level, std::ostream &out);
+	    const char* get_level(Level& log_level);
 	}; 
 
 }

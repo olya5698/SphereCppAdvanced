@@ -32,8 +32,24 @@ namespace log {
 
 	void BaseLogger::print_log_by_level(const std::string& msg, Level log_level, std::ostream& out) {
 		if (log_level >= level()) {
-	    	out << (log::get_level(log_level)) << msg.c_str() << std::endl;
+	    	out << get_level(log_level) << msg.c_str() << std::endl;
 	    }
+	}
+
+	const char* BaseLogger::get_level(Level& log_level) {
+		if (log_level == log::Level::DEBUG) {
+			return "DEBUG: ";
+		}
+
+		if (log_level == log::Level::INFO) {
+			return "INFO: ";
+		}
+
+		if (log_level == log::Level::WARNING) {
+			return "WARNING: ";
+		}
+
+		return "ERROR: ";
 	}
 
 }

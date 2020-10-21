@@ -26,15 +26,15 @@ namespace log {
     }
 
     void init_with_stdout_logger(Level log_level) {
-        Logger::get_instance().set_global_logger(std::move(std::make_unique<StdoutLogger>(log_level)));
+        Logger::get_instance().set_global_logger(std::make_unique<StdoutLogger>(log_level));
     }
 
     void init_with_stderr_logger(Level log_level) {
-        Logger::get_instance().set_global_logger(std::move(std::make_unique<StderrLogger>(log_level)));
+        Logger::get_instance().set_global_logger(std::make_unique<StderrLogger>(log_level));
     }
 
     void init_with_file_logger(const std::string& file_path, Level log_level) {
-        Logger::get_instance().set_global_logger(std::move(std::make_unique<FileLogger>(file_path, log_level)));
+        Logger::get_instance().set_global_logger(std::make_unique<FileLogger>(file_path, log_level));
     }
 
 } 

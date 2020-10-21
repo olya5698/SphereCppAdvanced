@@ -5,7 +5,6 @@ set(LIB_CODE
         "src/StdoutLogger.cpp"
         "src/StderrLogger.cpp"
         "src/FileLogger.cpp"
-        "src/Level.cpp"
         "src/Logger.cpp"
         "src/LoggerFunctions.cpp"
 )
