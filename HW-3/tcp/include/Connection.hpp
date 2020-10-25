@@ -14,7 +14,7 @@ namespace tcp {
 
     public:
         Connection();
-        Connection(int fd);
+        explicit Connection(int fd);
         Connection(const std::string& addr, uint16_t port);
 
         Connection(const Connection& other_connection) = delete;
@@ -31,7 +31,7 @@ namespace tcp {
         void readExact(char* data, size_t len);
         void writeExact(const char* data, size_t len);
 
-        void set_timeout(long ms);
+        void set_timeout(long sec);
 
     };
 

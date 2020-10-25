@@ -11,16 +11,13 @@
 namespace tcp {
 
     Connection::Connection() {
-        int fd = ::socket(AF_INET, SOCK_STREAM, 0);
-
-        if (fd == -1) {
-            throw std::runtime_error("Creating socket error");
-        }
-
-        conn_fd_.set_fd(fd);
+         conn_fd_.set_fd(-1);
     }
 
-    Connection::Connection(int fd) : conn_fd_(fd) {}
+    Connection::Connection(int fd) {
+        conn_fd_.set_fd(fd);
+        fd = -1;
+    }
 
     Connection::Connection(const std::string& addr, uint16_t port) {
         int fd = ::socket(AF_INET, SOCK_STREAM, 0);
@@ -44,19 +41,35 @@ namespace tcp {
         }
     }
 
-    Connection::Connection(Connection&& other_connection) noexcept
-        : conn_fd_(std::move(other_connection.conn_fd_)) {}
+    Connection::Connection(Connection&& other_connection) noexcept {
+        conn_fd_ = std::move(other_connection.conn_fd_);
+        other_connection.conn_fd_.set_fd(-1);
+    }
 
     Connection& Connection::operator=(Connection&& other_connection) noexcept {
+        close();
+
         if (&other_connection == this) {
             return *this;
         }
 
         conn_fd_ = std::move(other_connection.conn_fd_);
+        other_connection.conn_fd_.set_fd(-1);
+
         return *this;
     }
 
     void Connection::connect(const std::string& addr, uint16_t port) {
+        close();
+
+        int fd = ::socket(AF_INET, SOCK_STREAM, 0);
+
+        if (fd == -1) {
+            throw std::runtime_error("Creating socket error");
+        }
+
+        conn_fd_.set_fd(fd);
+
         sockaddr_in connection_addr{};
         connection_addr.sin_family = AF_INET;
         connection_addr.sin_port = ::htons(port);
@@ -68,7 +81,6 @@ namespace tcp {
         if (::connect(conn_fd_.get_fd(), reinterpret_cast<sockaddr*>(&connection_addr), sizeof(connection_addr)) == -1) {
             throw std::runtime_error("Connection error");
         }
-
     }
 
     void Connection::close() {
@@ -80,7 +92,7 @@ namespace tcp {
             throw std::runtime_error("Writing to closed descriptor aborted");
         }
 
-        ssize_t bytes_written = ::write(conn_fd_.get_fd(), data, len);
+        size_t bytes_written = ::write(conn_fd_.get_fd(), data, len);
 
         if (bytes_written == -1) {
             throw std::runtime_error("Write error");
@@ -90,11 +102,12 @@ namespace tcp {
     } 
 
     void Connection::writeExact(const char* data, size_t len) {
-        ssize_t bytes_written = 0;
+        size_t bytes_written = 0;
+        const char* data_start = data;
 
         while (bytes_written != len) {
-            data += bytes_written;
-            size_t bytes_written_part = write(data, len - bytes_written);
+            data_start += bytes_written;
+            size_t bytes_written_part = write(data_start, len - bytes_written);
 
             if (bytes_written_part == 0) {
                 throw std::runtime_error("Zero bytes written");
@@ -120,10 +133,11 @@ namespace tcp {
 
     void Connection::readExact(char* data, size_t len) {
         size_t bytes_read = 0;
+        char* data_start = data;
 
         while (bytes_read != len) {
-            data += bytes_read;
-            size_t bytes_read_part = read(data, len - bytes_read);
+            data_start += bytes_read;
+            size_t bytes_read_part = read(data_start, len - bytes_read);
             
             if (bytes_read_part == 0) {
                 throw std::runtime_error("Zero bytes read");
@@ -133,9 +147,10 @@ namespace tcp {
         }
     }
 
-    void Connection::set_timeout(long ms) {
-        timeval timeout{.tv_sec = ms, .tv_usec = 0};
-        if (setsockopt(conn_fd_.get_fd(),
+    void Connection::set_timeout(long sec) {
+        timeval timeout{.tv_sec = sec, .tv_usec = 0};
+
+        if (setsockopt(conn_fd_.get_fd(), 
                 SOL_SOCKET,
                 SO_SNDTIMEO | SO_RCVTIMEO,
                 &timeout,

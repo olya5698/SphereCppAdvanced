@@ -26,7 +26,7 @@ namespace tcp {
         Connection accept();
         void set_max_connect(int max_connection);
 
-        void set_timeout(long ms);
+        void set_timeout(long sec);
 
     };
 

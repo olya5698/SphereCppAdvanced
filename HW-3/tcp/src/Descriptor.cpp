@@ -7,47 +7,48 @@
 #include <iostream>
 
 namespace tcp {
-    Descriptor::Descriptor() noexcept {}
+    Descriptor::Descriptor() noexcept : fd_(-1) {}
 
-    Descriptor::Descriptor(int fd) noexcept : fd_(fd) {}
+    Descriptor::Descriptor(int fd) noexcept {
+        fd_ = fd;
+        fd = -1;
+    }
 
-    Descriptor::Descriptor(Descriptor&& other_fd) noexcept
-        : fd_(std::move(other_fd.fd_)) {}
+    Descriptor::Descriptor(Descriptor&& other_fd) noexcept {
+        fd_ = std::move(other_fd.fd_);
+        other_fd.set_fd(-1);
+    }
 
     Descriptor& Descriptor::operator=(Descriptor&& other_fd) noexcept {
+        close();
+
         if (&other_fd == this) {
             return *this;
         }
 
         fd_ = std::move(other_fd.fd_);
+        other_fd.set_fd(-1);
+
         return *this;
     }
 
     Descriptor::~Descriptor() {
-        try {
-            close();
-        }
-        catch (const std::runtime_error& err) {
-            std::cerr << err.what() << std::endl;
-        }
+        close();
     }
 
     void Descriptor::close() noexcept {
-        if (fd_ != -1) {
+        if (fd_ >= 0) {
             ::close(fd_);
             fd_ = -1;
         }
     }
 
     int Descriptor::get_fd() noexcept {
-        if (fd_ != -1) {
-            return fd_;
-        }
-        return -1;
+        return fd_;
     }
 
     void Descriptor::set_fd(int fd) noexcept {
-    	close();
+        close();
         fd_ = fd;
     }
 }
