@@ -13,8 +13,8 @@ namespace tcp {
         Descriptor conn_fd_;
 
     public:
-        Connection();
-        explicit Connection(int fd);
+        Connection() noexcept;
+        explicit Connection(int fd) noexcept;
         Connection(const std::string& addr, uint16_t port);
 
         Connection(const Connection& other_connection) = delete;

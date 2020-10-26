@@ -6,17 +6,15 @@
 #include <unistd.h>
 #include <utility>
 #include <exception>
-#include <iostream>
 
 namespace tcp {
 
-    Connection::Connection() {
+    Connection::Connection() noexcept {
          conn_fd_.set_fd(-1);
     }
 
-    Connection::Connection(int fd) {
-        conn_fd_.set_fd(fd);
-        fd = -1;
+    Connection::Connection(int fd) noexcept {
+        conn_fd_.set_fd(::dup(fd));
     }
 
     Connection::Connection(const std::string& addr, uint16_t port) {

@@ -11,7 +11,7 @@ namespace tcp {
         Descriptor server_fd_;
 
     public:
-        Server();
+        Server() noexcept;
         Server(const std::string& addr, uint16_t port, int max_connection = SOMAXCONN);
 
         Server(const Server& other_server) = delete;

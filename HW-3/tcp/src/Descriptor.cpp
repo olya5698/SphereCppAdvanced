@@ -4,14 +4,12 @@
 #include <utility>
 #include <sys/socket.h>
 #include <exception>
-#include <iostream>
 
 namespace tcp {
     Descriptor::Descriptor() noexcept : fd_(-1) {}
 
     Descriptor::Descriptor(int fd) noexcept {
-        fd_ = fd;
-        fd = -1;
+        fd_ = ::dup(fd);
     }
 
     Descriptor::Descriptor(Descriptor&& other_fd) noexcept {

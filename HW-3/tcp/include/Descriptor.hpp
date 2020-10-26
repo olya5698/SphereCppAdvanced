@@ -13,11 +13,11 @@ namespace tcp {
         Descriptor() noexcept;
         explicit Descriptor(int fd) noexcept;
 
-        Descriptor(Descriptor&& other_fd) noexcept;
-        Descriptor& operator=(Descriptor&& other_fd) noexcept;
-
         Descriptor(const Descriptor& other_fd) = delete;
         Descriptor& operator=(const Descriptor& other_fd) = delete;
+
+        Descriptor(Descriptor&& other_fd) noexcept;
+        Descriptor& operator=(Descriptor&& other_fd) noexcept;
 
         ~Descriptor();      
 

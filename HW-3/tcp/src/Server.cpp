@@ -4,13 +4,12 @@
 #include <unistd.h>
 #include <utility>
 #include <exception>
-#include <iostream>
 
 #include "Server.hpp"
 
 namespace tcp {
 
-    Server::Server() {
+    Server::Server() noexcept {
         server_fd_.set_fd(-1);
     }
 
