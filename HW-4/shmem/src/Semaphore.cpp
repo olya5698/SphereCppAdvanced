@@ -12,7 +12,7 @@ namespace shmem {
         }
     }
 
-    Semaphore::~Semaphore() {
+    Semaphore::~Semaphore() noexcept {
         try {
             destroy();
         } 

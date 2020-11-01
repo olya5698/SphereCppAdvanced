@@ -2,6 +2,7 @@
 #define SEMAPHORE_HPP
 
 #include <semaphore.h>
+#include <pthread.h>
 
 namespace shmem {
 
@@ -10,7 +11,7 @@ namespace shmem {
         sem_t sem_;
 
     public:
-        Semaphore(int pshared, unsigned int value);
+        explicit Semaphore(int pshared, unsigned int value);
 
         Semaphore(const Semaphore& other_sem) = delete;
         Semaphore& operator=(const Semaphore& other_sem) = delete;

@@ -15,39 +15,28 @@ int main() {
     size_t blocks_count = 100;
     size_t block_size = 128;
     size_t shmem_size = blocks_count * block_size;
-    void* mmap = ::mmap(0, shmem_size,
-                        PROT_READ | PROT_WRITE,
-                        MAP_ANONYMOUS | MAP_SHARED,
-                        -1, 0);
 
-    if(mmap == MAP_FAILED) {
-        std::cerr << "Failed to create shared map" << std::endl;
-        return 1;
-    }
+    shmem::ShUPtr sh_mem = shmem::create_shmem<char>(shmem_size);
+    shmem::ShMemState* state = new(sh_mem.get()) shmem::ShMemState{};
 
-    ShUPtr shmem{static_cast<char*>(mmap),
-                [shmem_size](char* shmem) { ::munmap(shmem, shmem_size); }};
-
-    ShMemState* state = new(shmem.get()) ShMemState{};
-
-    float header_size = (sizeof(ShMemState) + blocks_count) / static_cast<float>(block_size);
+    float header_size = (sizeof(shmem::ShMemState) + blocks_count) / static_cast<float>(block_size);
     state->block_size = block_size;
     state->blocks_count = blocks_count - std::floor(header_size);
-    state->used_blocks_table = shmem.get() + sizeof(ShMemState);
+    state->used_blocks_table = sh_mem.get() + sizeof(shmem::ShMemState);
     state->first_block = state->used_blocks_table + state->blocks_count;
-    ::memset(state->used_blocks_table, FREE_BLOCK, state->blocks_count);
+    ::memset(state->used_blocks_table, shmem::FREE_BLOCK, state->blocks_count);
 
-    ShAlloc<ShString> alloc{state};
-    ShString* string = new(alloc.allocate(1)) ShString{alloc};
+    shmem::ShAlloc<shmem::ShString> alloc{state};
+    shmem::ShString* str = new(alloc.allocate(1)) shmem::ShString{alloc};
 
     int fork = ::fork();
     if (fork == 0) {
-        *string = "Hello from Child!";
+        *str = "Hello from Child!";
         return 0;
     }
 
     ::waitpid(fork, nullptr, 0);
-    std::cout << *string << std::endl;
+    std::cout << *str << std::endl;
 
     return 0;
 }

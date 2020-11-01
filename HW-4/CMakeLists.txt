@@ -6,3 +6,5 @@ set(LIB_NAME shmem)
 
 add_subdirectory(shmem)
 add_subdirectory(src)
+
+target_link_libraries(${LIB_NAME} pthread)

@@ -11,76 +11,102 @@
 #include <sys/mman.h>
 #include <sys/wait.h>
 
-constexpr char USED_BLOCK = '1';
-constexpr char FREE_BLOCK = '0';
+namespace shmem {
 
-namespace {
+    constexpr char USED_BLOCK = '1';
+    constexpr char FREE_BLOCK = '0';
 
-    size_t get_size_in_blocks(size_t bytes, size_t block_size) {
-        float blocks_needed = bytes / static_cast<float>(block_size);
-        return std::ceil(blocks_needed);
-    }
+    namespace {
 
-    size_t find_free_blocks(size_t blocks_count, const std::string_view& used_table) {
-        std::string pattern(blocks_count, FREE_BLOCK);
-        size_t pos = used_table.find(pattern);
-        if(pos == std::string::npos) {
-            throw std::bad_alloc{};
+        size_t get_size_in_blocks(size_t bytes, size_t block_size) {
+            float blocks_needed = bytes / static_cast<float>(block_size);
+            return std::ceil(blocks_needed);
         }
-        return pos;
+
+        size_t find_free_blocks(size_t blocks_count, const std::string_view& used_table) {
+            std::string pattern(blocks_count, FREE_BLOCK);
+            size_t pos = used_table.find(pattern);
+
+            if (pos == std::string::npos) {
+                throw std::bad_alloc{};
+            }
+            
+            return pos;
+        }
+
+    }
+
+    struct ShMemState {
+        size_t blocks_count;
+        size_t block_size;
+        char* used_blocks_table;
+        char* first_block;
+    };
+
+    template<typename T>
+    class ShAlloc {
+    public:
+        using value_type = T;
+
+        explicit ShAlloc(ShMemState* state)
+            : state_{state} {}
+
+        template<class U>
+        ShAlloc(const ShAlloc<U>& other) noexcept {
+            state_ = other.state_;
+        }
+
+        T* allocate(size_t n) {
+            size_t blocks_needed = get_size_in_blocks(sizeof(T) * n, state_->block_size);
+            std::string_view table{state_->used_blocks_table, state_->blocks_count};
+            size_t blocks_pos = find_free_blocks(blocks_needed, table);
+            ::memset(state_->used_blocks_table + blocks_pos, USED_BLOCK, blocks_needed);
+            return reinterpret_cast<T*>(state_->first_block + blocks_pos * state_->block_size);
+        }
+
+        void deallocate(T* p, size_t n) noexcept {
+            size_t offset = (reinterpret_cast<char*>(p) - state_->first_block) / state_->block_size;
+            size_t blocks_count = get_size_in_blocks(sizeof(T) * n, state_->block_size);
+            ::memset(state_->used_blocks_table + offset, FREE_BLOCK, blocks_count);
+        }
+
+        ShMemState* state_;
+    };
+
+    template <class T, class U>
+    bool operator==(const ShAlloc<T>&a, const ShAlloc<U>&b) {
+        return a.state_ == b.state_;
+    }
+
+    template <class T, class U>
+    bool operator!=(const ShAlloc<T>&a, const ShAlloc<U>&b) {
+        return a.state_ != b.state_;
+    }
+
+    using CharAlloc = ShAlloc<char>;
+    using ShString = std::basic_string<char, std::char_traits<char>, CharAlloc>;
+    using ShUPtr = std::unique_ptr<char, std::function<void(char*)>>;
+
+    template <typename T>
+    using ShUTPtr = std::unique_ptr<T, std::function<void(T*)>>;
+
+    template <typename T>
+    ShUTPtr<T> create_shmem(size_t n = 1) {
+        size_t shmem_size = sizeof(T) * n;
+
+        void* mmap = ::mmap(0, shmem_size,
+                    PROT_READ | PROT_WRITE,
+                    MAP_ANONYMOUS | MAP_SHARED,
+                    -1, 0);
+
+        if (mmap == MAP_FAILED) {
+            throw std::runtime_error("Failed to create shared mmap");
+        }
+
+        return {reinterpret_cast<T*>(mmap),
+                    [shmem_size](T* t_shmem) { ::munmap(t_shmem, shmem_size); }};
     }
 
 }
-
-struct ShMemState {
-    size_t blocks_count;
-    size_t block_size;
-    char* used_blocks_table;
-    char* first_block;
-};
-
-template<typename T>
-class ShAlloc {
-public:
-    typedef T value_type;
-
-    explicit ShAlloc(ShMemState* state)
-      : state_{state} {}
-
-    template<class U>
-    ShAlloc(const ShAlloc<U>& other) noexcept {
-        state_ = other.state_;
-    }
-
-    T* allocate(std::size_t n) {
-        size_t blocks_needed = get_size_in_blocks(sizeof(T) * n, state_->block_size);
-        std::string_view table{state_->used_blocks_table, state_->blocks_count};
-        size_t blocks_pos = find_free_blocks(blocks_needed, table);
-        ::memset(state_->used_blocks_table + blocks_pos, USED_BLOCK, blocks_needed);
-        return reinterpret_cast<T*>(state_->first_block + blocks_pos * state_->block_size);
-    }
-
-    void deallocate(T* p, std::size_t n) noexcept {
-        size_t offset = (reinterpret_cast<char*>(p) - state_->first_block) / state_->block_size;
-        size_t blocks_count = get_size_in_blocks(sizeof(T) * n, state_->block_size);
-        ::memset(state_->used_blocks_table + offset, FREE_BLOCK, blocks_count);
-    }
-
-    ShMemState* state_;
-};
-
-template <class T, class U>
-bool operator==(const ShAlloc<T>&a, const ShAlloc<U>&b) {
-    return a.state_ == b.state_;
-}
-
-template <class T, class U>
-bool operator!=(const ShAlloc<T>&a, const ShAlloc<U>&b) {
-    return a.state_ != b.state_;
-}
-
-using CharAlloc = ShAlloc<char>;
-using ShString = std::basic_string<char, std::char_traits<char>, CharAlloc>;
-using ShUPtr = std::unique_ptr<char, std::function<void(char*)>>;
 
 #endif
