@@ -46,7 +46,6 @@ namespace tcp {
     }
 
     void Descriptor::set_fd(int fd) noexcept {
-        close();
-        fd_ = fd;
+        fd_ = ::dup(fd);
     }
 }

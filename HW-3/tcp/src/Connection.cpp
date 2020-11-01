@@ -60,14 +60,6 @@ namespace tcp {
     void Connection::connect(const std::string& addr, uint16_t port) {
         close();
 
-        int fd = ::socket(AF_INET, SOCK_STREAM, 0);
-
-        if (fd == -1) {
-            throw std::runtime_error("Creating socket error");
-        }
-
-        conn_fd_.set_fd(fd);
-
         sockaddr_in connection_addr{};
         connection_addr.sin_family = AF_INET;
         connection_addr.sin_port = ::htons(port);
@@ -76,9 +68,18 @@ namespace tcp {
             throw std::runtime_error("Invalid IP host address in connection");
         }
 
-        if (::connect(conn_fd_.get_fd(), reinterpret_cast<sockaddr*>(&connection_addr), sizeof(connection_addr)) == -1) {
+        int fd = ::socket(AF_INET, SOCK_STREAM, 0);
+
+        if (fd == -1) {
+            throw std::runtime_error("Creating socket error");
+        }
+
+        Descriptor conn_fd_tmp(fd);
+        if (::connect(conn_fd_tmp.get_fd(), reinterpret_cast<sockaddr*>(&connection_addr), sizeof(connection_addr)) == -1) {
             throw std::runtime_error("Connection error");
         }
+
+        conn_fd_ = std::move(conn_fd_tmp);
     }
 
     void Connection::close() {

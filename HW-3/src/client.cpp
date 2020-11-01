@@ -11,7 +11,8 @@ int main() {
     int buf_size = 12;
 
     try {
-        tcp::Connection connection(ip, port);
+        tcp::Connection connection;
+        connection.connect(ip, port);
         connection.set_timeout(5);
 
         std::string msg(msg_size, '\0');
