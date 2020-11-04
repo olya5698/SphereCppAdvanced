@@ -2,6 +2,7 @@
 #define SHAREDMAP_HPP
 
 #include "SharedAllocator.hpp"
+#include "SharedMemory.hpp"
 #include "SemLock.hpp"
 #include "Semaphore.hpp"
 
@@ -28,7 +29,7 @@ namespace shmem {
     public:
         explicit SharedMap(size_t block_size, size_t blocks_count) {
             size_t mmap_size = block_size * blocks_count;
-            mmap_ = create_shmem<char>(mmap_size);
+            mmap_ = shmem::create_shmem<char>(mmap_size);
 
             shmem::ShMemState* state = new(mmap_.get()) shmem::ShMemState{};
             float header_size = (sizeof(shmem::ShMemState) + blocks_count) / static_cast<float>(block_size);
@@ -40,12 +41,16 @@ namespace shmem {
             ::memset(state->used_blocks_table, shmem::FREE_BLOCK, state->blocks_count);
 
             semaphore_ = new(state->first_block) Semaphore(1, 1);
-            state->first_block = static_cast<char*>(state->first_block) + sizeof(Semaphore);
+            size_t semaphore_blocks_needed = get_size_in_blocks(sizeof(Semaphore), state->block_size);
+            state->first_block = state->first_block + semaphore_blocks_needed * state->block_size;
 
-            allocator_type map_alloc(state);
+            allocator_type map_alloc{state};
             map_ = new(state->first_block) shared_map{map_alloc};
-            state->first_block = static_cast<char*>(state->first_block) + sizeof(shared_map);
+            size_t shared_map_blocks_needed = get_size_in_blocks(sizeof(shared_map), state->block_size);
+            state->first_block = state->first_block + shared_map_blocks_needed * state->block_size;
 
+            ::memset(state->used_blocks_table, shmem::USED_BLOCK, semaphore_blocks_needed + shared_map_blocks_needed);
+            state->blocks_count = state->blocks_count - (semaphore_blocks_needed + shared_map_blocks_needed);
         }
 
         void destroy() {
@@ -70,7 +75,7 @@ namespace shmem {
 
         void update(const value_type& value) {
             SemLock wait(*semaphore_);
-            map_->at(std::get<0>(value)) = std::get<1>(value);
+            map_->at(value.first) = value.second;
         }
 
         auto insert(const value_type& value) {

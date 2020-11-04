@@ -6,7 +6,6 @@
 #include <iostream>
 #include <unistd.h>
 #include <cstring>
-#include <csignal>
 #include <wait.h>
 
 int main() {
@@ -15,11 +14,11 @@ int main() {
         size_t block_size = 128;
 
         shmem::SharedMap<int, shmem::ShString> map(block_size, blocks_count);
-        shmem::CharAlloc aloc(map.get_allocator().state_);
+        shmem::ShAlloc<char> alloc(map.get_allocator().state_);
 
-        map.insert({1, {7, '1', aloc}});
-        map.insert({2, {8, '2', aloc}});
-        map.insert({3, {9, '3', aloc}});
+        map.insert({1, {7, '1', alloc}});
+        map.insert({2, {8, '2', alloc}});
+        map.insert({3, {9, '3', alloc}});
 
         pid_t pid = ::fork();
 
@@ -36,14 +35,15 @@ int main() {
                 it++;
             }
 
-            map.insert({4, {6, '4', aloc}});
-            map.update({2, {5, '7', aloc}});
+            map.insert({4, {6, '4', alloc}});
+            map.update({2, {5, '7', alloc}});
             map.remove(3);
+            std::cout << "map.get(2): " << map.get(2) << std::endl;
 
         } else {
             ::sleep(2);
             std::cout << "Parent process" << std::endl;
-            map.insert({5, {5, '5', aloc}});
+            map.insert({5, {5, '5', alloc}});
             
             auto it = map.begin();
             while (it != map.end()) {
@@ -52,10 +52,6 @@ int main() {
             }
 
             map.destroy();
-
-            if (::kill(pid, SIGINT) == -1) {
-                throw std::runtime_error("Kill error");
-            }
 
             if (::waitpid(pid, nullptr, 0) == -1) {
                 throw std::runtime_error("Waitpid error");

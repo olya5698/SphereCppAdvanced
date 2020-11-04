@@ -2,7 +2,6 @@
 #define SEMAPHORE_HPP
 
 #include <semaphore.h>
-#include <pthread.h>
 
 namespace shmem {
 
