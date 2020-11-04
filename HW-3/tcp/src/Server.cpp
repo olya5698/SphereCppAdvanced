@@ -6,6 +6,7 @@
 #include <exception>
 
 #include "Server.hpp"
+#include "Exception.hpp"
 
 namespace tcp {
 
@@ -17,7 +18,7 @@ namespace tcp {
         int fd = ::socket(AF_INET, SOCK_STREAM, 0);
 
         if (fd == -1) {
-            throw std::runtime_error("Creating socket error");
+            throw ServerError("Creating socket error");
         }
 
         server_fd_.set_fd(fd);
@@ -27,11 +28,11 @@ namespace tcp {
         server_addr.sin_port = ::htons(port);
 
         if (::inet_aton(addr.c_str(), &server_addr.sin_addr) == 0) {
-            throw std::runtime_error("Invalid IP host address in server");
+            throw ServerError("Invalid IP host address in server");
         }
 
         if (::bind(server_fd_.get_fd(), reinterpret_cast<sockaddr*>(&server_addr), sizeof(server_addr)) == -1) {
-            throw std::runtime_error("Socket binding error");
+            throw ServerError("Socket binding error");
         }
 
         set_max_connect(max_connection);
@@ -63,18 +64,18 @@ namespace tcp {
         server_addr.sin_port = ::htons(port);
 
         if (::inet_aton(addr.c_str(), &server_addr.sin_addr) == 0) {
-            throw std::runtime_error("Invalid IP host address in server");
+            throw ServerError("Invalid IP host address in server");
         }
 
         int fd = ::socket(AF_INET, SOCK_STREAM, 0);
 
         if (fd == -1) {
-            throw std::runtime_error("Creating socket error");
+            throw ServerError("Creating socket error");
         }
 
         Descriptor server_fd_tmp(fd);
         if (::connect(server_fd_tmp.get_fd(), reinterpret_cast<sockaddr*>(&server_addr), sizeof(server_addr)) == -1) {
-            throw std::runtime_error("Connection error");
+            throw ServerError("Connection error");
         }
 
         server_fd_ = std::move(server_fd_tmp);
@@ -84,7 +85,7 @@ namespace tcp {
 
     void Server::set_max_connect(int max_connection) {
         if (::listen(server_fd_.get_fd(), max_connection) == -1) {
-            throw std::runtime_error("Socket listen error");
+            throw ServerError("Socket listen error");
         }
     }
 
@@ -95,7 +96,7 @@ namespace tcp {
         int client_fd = ::accept(server_fd_.get_fd(), reinterpret_cast<sockaddr*>(&client_addr), &client_addr_size);
         
         if (client_fd == -1) {
-            throw std::runtime_error("Socket accept error");
+            throw ServerError("Socket accept error");
         }
 
         return Connection(client_fd);
@@ -113,7 +114,7 @@ namespace tcp {
                 SO_SNDTIMEO | SO_RCVTIMEO,
                 &timeout,
                 sizeof(timeout)) < 0) {
-            throw std::runtime_error("Set timeout error");
+            throw ServerError("Set timeout error");
         }
     }
 

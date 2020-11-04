@@ -1,8 +1,11 @@
 #include "Connection.hpp"
+#include "Exception.hpp"
 
 #include <iostream>
 #include <string>
+#include <cstring>
 #include <exception>
+#include <stdexcept>
 
 int main() {
     std::string ip = "127.0.0.1";
@@ -38,7 +41,10 @@ int main() {
 
         connection.close();
     }
-    catch (const std::runtime_error& err) {
+    catch (const tcp::DescriptorError& err) {
+        std::cerr << err.what() << std::endl;
+    }
+    catch (const tcp::ConnectionError& err) {
         std::cerr << err.what() << std::endl;
     }
 }

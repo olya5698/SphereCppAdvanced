@@ -1,4 +1,5 @@
 #include "Descriptor.hpp"
+#include "Exception.hpp"
 
 #include <unistd.h>
 #include <utility>
@@ -30,7 +31,7 @@ namespace tcp {
         return *this;
     }
 
-    Descriptor::~Descriptor() {
+    Descriptor::~Descriptor() noexcept {
         close();
     }
 

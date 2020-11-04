@@ -1,4 +1,5 @@
 #include "Descriptor.hpp"
+#include "Exception.hpp"
 
 #include <iostream>
 #include <string>
@@ -21,7 +22,7 @@ int main() {
         std::cout << "desc2 = " << desc2.get_fd() << ", " << "errno = " << errno << ' ' << std::strerror(errno) << std::endl;
         std::cout << "desc3 = " << desc3.get_fd() << ", " << "errno = " << errno << ' ' << std::strerror(errno) << std::endl;
     }
-    catch (const std::runtime_error& err) {
+    catch (const tcp::DescriptorError& err) {
         std::cerr << err.what() << std::endl;
     }
 }

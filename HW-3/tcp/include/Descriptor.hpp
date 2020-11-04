@@ -19,7 +19,7 @@ namespace tcp {
         Descriptor(Descriptor&& other_fd) noexcept;
         Descriptor& operator=(Descriptor&& other_fd) noexcept;
 
-        ~Descriptor();      
+        ~Descriptor() noexcept;      
 
         void set_fd(int fd) noexcept;
         int get_fd() noexcept;

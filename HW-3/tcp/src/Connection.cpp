@@ -1,4 +1,5 @@
 #include "Connection.hpp"
+#include "Exception.hpp"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -21,7 +22,7 @@ namespace tcp {
         int fd = ::socket(AF_INET, SOCK_STREAM, 0);
 
         if (fd == -1) {
-            throw std::runtime_error("Creating socket error");
+            throw ConnectionError("Creating socket error");
         }
 
         conn_fd_.set_fd(fd);
@@ -31,11 +32,11 @@ namespace tcp {
         connection_addr.sin_port = ::htons(port);
 
         if (::inet_aton(addr.c_str(), &connection_addr.sin_addr) == 0) {
-            throw std::runtime_error("Invalid IP host address in connection");
+            throw ConnectionError("Invalid IP host address in connection");
         }
 
         if (::connect(conn_fd_.get_fd(), reinterpret_cast<sockaddr*>(&connection_addr), sizeof(connection_addr)) == -1) {
-            throw std::runtime_error("Connection error");
+            throw ConnectionError("Connection error");
         }
     }
 
@@ -65,18 +66,18 @@ namespace tcp {
         connection_addr.sin_port = ::htons(port);
 
         if (::inet_aton(addr.c_str(), &connection_addr.sin_addr) == 0) {
-            throw std::runtime_error("Invalid IP host address in connection");
+            throw ConnectionError("Invalid IP host address in connection");
         }
 
         int fd = ::socket(AF_INET, SOCK_STREAM, 0);
 
         if (fd == -1) {
-            throw std::runtime_error("Creating socket error");
+            throw ConnectionError("Creating socket error");
         }
 
         Descriptor conn_fd_tmp(fd);
         if (::connect(conn_fd_tmp.get_fd(), reinterpret_cast<sockaddr*>(&connection_addr), sizeof(connection_addr)) == -1) {
-            throw std::runtime_error("Connection error");
+            throw ConnectionError("Connection error");
         }
 
         conn_fd_ = std::move(conn_fd_tmp);
@@ -88,13 +89,13 @@ namespace tcp {
 
     size_t Connection::write(const char* data, size_t len) {
         if (conn_fd_.get_fd() == -1) {
-            throw std::runtime_error("Writing to closed descriptor aborted");
+            throw ConnectionError("Writing to closed descriptor aborted");
         }
 
         size_t bytes_written = ::write(conn_fd_.get_fd(), data, len);
 
         if (bytes_written == -1) {
-            throw std::runtime_error("Write error");
+            throw ConnectionError("Write error");
         }
 
         return bytes_written;
@@ -109,7 +110,7 @@ namespace tcp {
             size_t bytes_written_part = write(data_start, len - bytes_written);
 
             if (bytes_written_part == 0) {
-                throw std::runtime_error("Zero bytes written");
+                throw ConnectionError("Zero bytes written");
             }
 
             bytes_written += bytes_written_part;
@@ -118,13 +119,13 @@ namespace tcp {
 
     size_t Connection::read(char* data, size_t len) {
         if (conn_fd_.get_fd() == -1) {
-            throw std::runtime_error("Reading from closed descriptor aborted");
+            throw ConnectionError("Reading from closed descriptor aborted");
         }
 
         size_t bytes_read = ::read(conn_fd_.get_fd(), data, len);
 
         if (bytes_read == -1) {
-            throw std::runtime_error("Read error");
+            throw ConnectionError("Read error");
         }
 
         return bytes_read;
@@ -139,7 +140,7 @@ namespace tcp {
             size_t bytes_read_part = read(data_start, len - bytes_read);
             
             if (bytes_read_part == 0) {
-                throw std::runtime_error("Zero bytes read");
+                throw ConnectionError("Zero bytes read");
             }
 
             bytes_read += bytes_read_part;
@@ -154,7 +155,7 @@ namespace tcp {
                 SO_SNDTIMEO | SO_RCVTIMEO,
                 &timeout,
                 sizeof(timeout)) < 0) {
-            throw std::runtime_error("Set timeout error");
+            throw ConnectionError("Set timeout error");
         }
     }
 

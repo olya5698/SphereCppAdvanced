@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "Exception.hpp"
 
 #include <iostream>
 #include <string>
@@ -33,9 +34,14 @@ int main() {
 
         conn2.read(buf.data(), buf_size);
         std::cout << "Received: " << buf << std::endl;
-
     }
-    catch (const std::runtime_error& err) {
+    catch (const tcp::DescriptorError& err) {
+        std::cerr << err.what() << std::endl;
+    }
+    catch (const tcp::ConnectionError& err) {
+        std::cerr << err.what() << std::endl;
+    }
+    catch (const tcp::ServerError& err) {
         std::cerr << err.what() << std::endl;
     }
 }
