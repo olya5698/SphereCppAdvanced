@@ -47,7 +47,7 @@ namespace shmem {
             allocator_type map_alloc{state};
             map_ = new(state->first_block) shared_map{map_alloc};
             size_t shared_map_blocks_needed = get_size_in_blocks(sizeof(shared_map), state->block_size);
-            //state->first_block = state->first_block + shared_map_blocks_needed * state->block_size;
+            state->first_block = state->first_block + shared_map_blocks_needed * state->block_size;
 
             ::memset(state->used_blocks_table, shmem::USED_BLOCK, semaphore_blocks_needed + shared_map_blocks_needed);
             state->blocks_count = state->blocks_count - (semaphore_blocks_needed + shared_map_blocks_needed);
