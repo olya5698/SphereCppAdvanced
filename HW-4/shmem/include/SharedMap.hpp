@@ -58,7 +58,7 @@ namespace shmem {
             map_->~map();
         }
 
-        auto get_allocator() const {
+        allocator_type get_allocator() const {
             SemLock wait(*semaphore_);
             return map_->get_allocator();
         }
@@ -73,9 +73,10 @@ namespace shmem {
             return map_->end();
         }
 
-        void update(const value_type& value) {
+        mapped_type& update(const value_type& value) {
             SemLock wait(*semaphore_);
             map_->at(value.first) = value.second;
+            return map_->at(value.first);
         }
 
         auto insert(const value_type& value) {
@@ -83,7 +84,7 @@ namespace shmem {
             return map_->insert(value);
         }
 
-        auto& get(const key_type& key) {
+        mapped_type& get(const key_type& key) {
             SemLock wait(*semaphore_);
             return map_->at(key);
         }

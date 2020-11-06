@@ -10,7 +10,7 @@ namespace shmem {
         sem_t sem_;
 
     public:
-        explicit Semaphore(int pshared, unsigned int value);
+        Semaphore(int pshared, unsigned int value);
 
         Semaphore(const Semaphore& other_sem) = delete;
         Semaphore& operator=(const Semaphore& other_sem) = delete;
