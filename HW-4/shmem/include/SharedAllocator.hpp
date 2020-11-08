@@ -1,6 +1,9 @@
 #ifndef SHAREDALLOCATOR_HPP
 #define SHAREDALLOCATOR_HPP
 
+#include "Semaphore.hpp"
+#include "SemLock.hpp"
+
 #include <iostream>
 #include <memory>
 #include <cmath>
@@ -41,6 +44,7 @@ namespace shmem {
         size_t block_size;
         char* used_blocks_table;
         char* first_block;
+        Semaphore alloc_sem = Semaphore(1, 1);
     };
 
     template<typename T>
@@ -57,6 +61,7 @@ namespace shmem {
         }
 
         T* allocate(size_t n) {
+            SemLock lock_alloc(state_->alloc_sem);
             size_t blocks_needed = get_size_in_blocks(sizeof(T) * n, state_->block_size);
             std::string_view table{state_->used_blocks_table, state_->blocks_count};
             size_t blocks_pos = find_free_blocks(blocks_needed, table);
@@ -65,6 +70,7 @@ namespace shmem {
         }
 
         void deallocate(T* p, size_t n) noexcept {
+            SemLock lock_dealloc(state_->alloc_sem);
             size_t offset = (reinterpret_cast<char*>(p) - state_->first_block) / state_->block_size;
             size_t blocks_count = get_size_in_blocks(sizeof(T) * n, state_->block_size);
             ::memset(state_->used_blocks_table + offset, FREE_BLOCK, blocks_count);

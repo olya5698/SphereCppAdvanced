@@ -11,7 +11,7 @@ namespace shmem {
         semaphore_.wait();
     }
 
-    SemLock::~SemLock() noexcept {
+    SemLock::~SemLock() {
         try {
             semaphore_.post();
         } 

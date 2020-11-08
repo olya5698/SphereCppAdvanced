@@ -12,7 +12,25 @@ namespace shmem {
         }
     }
 
-    Semaphore::~Semaphore() noexcept {
+    Semaphore::Semaphore(Semaphore&& other_sem) noexcept {
+        sem_ = std::move(other_sem.sem_);
+        other_sem.destroy();
+    }
+
+    Semaphore& Semaphore::operator=(Semaphore&& other_sem) noexcept {
+        destroy();
+
+        if (&other_sem == this) {
+            return *this;
+        }
+
+        sem_ = std::move(other_sem.sem_);
+        other_sem.destroy();
+
+        return *this;
+    }
+
+    Semaphore::~Semaphore() {
         try {
             destroy();
         } 

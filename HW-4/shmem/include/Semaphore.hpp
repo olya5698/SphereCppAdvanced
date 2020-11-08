@@ -15,7 +15,10 @@ namespace shmem {
         Semaphore(const Semaphore& other_sem) = delete;
         Semaphore& operator=(const Semaphore& other_sem) = delete;
 
-        ~Semaphore() noexcept;      
+        Semaphore(Semaphore&& other_sem) noexcept;
+        Semaphore& operator=(Semaphore&& other_sem) noexcept;
+
+        ~Semaphore();      
 
         void post();
         void wait();

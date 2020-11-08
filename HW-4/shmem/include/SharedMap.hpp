@@ -32,25 +32,28 @@ namespace shmem {
             mmap_ = shmem::create_shmem<char>(mmap_size);
 
             shmem::ShMemState* state = new(mmap_.get()) shmem::ShMemState{};
-            float header_size = (sizeof(shmem::ShMemState) + blocks_count) / static_cast<float>(block_size);
-            
-            state->block_size = block_size;
-            state->blocks_count = blocks_count - std::ceil(header_size);
-            state->used_blocks_table = mmap_.get() + sizeof(shmem::ShMemState);
-            state->first_block = state->used_blocks_table + state->blocks_count;
-            ::memset(state->used_blocks_table, shmem::FREE_BLOCK, state->blocks_count);
+            size_t header_size = sizeof(shmem::ShMemState);
 
-            semaphore_ = new(state->first_block) Semaphore(1, 1);
-            size_t semaphore_blocks_needed = get_size_in_blocks(sizeof(Semaphore), state->block_size);
-            state->first_block = state->first_block + semaphore_blocks_needed * state->block_size;
+            semaphore_ = new(mmap_.get() + header_size) Semaphore(1, 1);
+            header_size += sizeof(Semaphore);
 
             allocator_type map_alloc{state};
-            map_ = new(state->first_block) shared_map{map_alloc};
-            size_t shared_map_blocks_needed = get_size_in_blocks(sizeof(shared_map), state->block_size);
-            state->first_block = state->first_block + shared_map_blocks_needed * state->block_size;
+            map_ = new(mmap_.get() + header_size) shared_map{map_alloc};
+            header_size += sizeof(shared_map);
 
-            ::memset(state->used_blocks_table, shmem::USED_BLOCK, semaphore_blocks_needed + shared_map_blocks_needed);
-            state->blocks_count = state->blocks_count - (semaphore_blocks_needed + shared_map_blocks_needed);
+            header_size += blocks_count;
+
+            size_t header_size_in_blocks = std::ceil(header_size / static_cast<float>(block_size));
+            
+            state->block_size = block_size;
+            state->blocks_count = blocks_count - header_size_in_blocks;
+            state->used_blocks_table = mmap_.get() + header_size - state->blocks_count;
+            state->first_block = mmap_.get() + header_size;
+            ::memset(state->used_blocks_table, shmem::FREE_BLOCK, state->blocks_count);
+        }
+
+        ~SharedMap() {
+            destroy();
         }
 
         void destroy() {
@@ -73,7 +76,7 @@ namespace shmem {
             return map_->end();
         }
 
-        mapped_type& update(const value_type& value) {
+        mapped_type update(const value_type& value) {
             SemLock wait(*semaphore_);
             map_->at(value.first) = value.second;
             return map_->at(value.first);
@@ -84,7 +87,7 @@ namespace shmem {
             return map_->insert(value);
         }
 
-        mapped_type& get(const key_type& key) {
+        mapped_type get(const key_type& key) {
             SemLock wait(*semaphore_);
             return map_->at(key);
         }

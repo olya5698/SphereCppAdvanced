@@ -11,7 +11,7 @@ namespace shmem {
 
     public:
         explicit SemLock(Semaphore& semaphore);
-        ~SemLock() noexcept;
+        ~SemLock();
     };
 
 }
